@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { View, TextInput, Button, FlatList, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import searchVarieties from '../utils/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,9 +8,18 @@ export default function HomeScreen({ navigation }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [firstVisit, setFirstVisit] = useState(true);
+
   useLayoutEffect(() => {
     navigation.setOptions({ title: 'Home' });
   }, [navigation]);
+
+  useEffect(() => {
+    if (firstVisit) {
+      Alert.alert('Search Tips', 'Please make sure to enter the full variety name for accurate search results');
+      setFirstVisit(false);
+    }
+  }, [firstVisit]);
 
   const searchForItems = async () => {
     if (!searchTerm.trim()) {
@@ -21,10 +30,11 @@ export default function HomeScreen({ navigation }) {
     setLoading(true);
     try {
       const fetchedResults = await searchVarieties(searchTerm);
-      if (fetchedResults.length === 0) {
+      if (!fetchedResults.results || fetchedResults.results.length === 0) {
         Alert.alert('No Results', 'No varieties found for your search');
+      } else {
+        setResults(fetchedResults.results);
       }
-      setResults(fetchedResults.results);
     } catch (error) {
       Alert.alert('Error', 'An error occurred while searching');
       console.error(error);
